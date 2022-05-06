@@ -66,10 +66,15 @@ int main(int argc, char* argv[])
         Shader shader("E:\\Projects\\OpenGL\\assignment3-cloth-BradZhone-main\\reference\\res\\shader\\cloth.vs", "E:\\Projects\\OpenGL\\assignment3-cloth-BradZhone-main\\reference\\res\\shader\\cloth.fs");
         FirstPersonCamera camera;
 
+        /*******************************my code*************************************/
+        const bool draw_sphere = 1; // whether to draw a sphere
+        const bool wind = 0; // whether to generate wind
+        /*******************************my code end*************************************/
+
         auto transform = glm::rotate(glm::mat4(1.0f), glm::radians(60.0f), {1.0f, 0.0f, 0.0f});
 
-        RectCloth cloth {40, 30, 0.1f, transform};
-        RectClothRenderer renderer(&shader, &camera, &cloth);
+        RectCloth cloth {25, 25, 0.1f, transform, draw_sphere, wind};  //******my code*******
+        RectClothRenderer renderer(&shader, &camera, &cloth, draw_sphere);
 
         { // Initialize here
 
@@ -98,8 +103,9 @@ int main(int argc, char* argv[])
                 // Debug Update here only when p is pressed
                 if(glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
                 {
+                }
                     // A fixed timestep which should not be too large in order to stabilize the simulation
-                    float timestep = 0.001f;
+                    float timestep = 0.0026f;
                     int iter_count = deltaTime / timestep;
 
                     for (int i = 0; i < iter_count; ++i) {
@@ -107,8 +113,10 @@ int main(int argc, char* argv[])
                             break; // cannot finish computation, stop earlier
 
                         // step function here e.g. simulator.step(timestep);
+                        /*******************************my code*************************************/
+                        cloth.updateCloth(timestep);
+                        /*******************************my code end*************************************/
                     }
-                }
             }
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

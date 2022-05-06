@@ -60,16 +60,24 @@ private:
     RectCloth* cloth;
 
     GLObject glo;
+    /*******************************my code*************************************/
+    bool draw_sphere;
+    GLObject sphere; // render a sphere
+    /*******************************my code*************************************/
 
 public:
     RectClothRenderer(
         Shader* shader,
         FirstPersonCamera* camera,
-        RectCloth* cloth
+        RectCloth* cloth,
+        bool draw_sphere //******my code*******
     );
     ~RectClothRenderer() = default;
 
     void draw();
+    /*******************************my code*************************************/
+    void createSphere(float radius, float rx, float ry, float rz);
+    /*******************************my code end*************************************/
 
 private:
     void initVertices();

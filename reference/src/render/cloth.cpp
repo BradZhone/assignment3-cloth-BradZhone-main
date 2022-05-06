@@ -7,17 +7,23 @@ RectClothRenderer::
 RectClothRenderer(
     Shader* shader,
     FirstPersonCamera* camera,
-    RectCloth* cloth
+    RectCloth* cloth,
+    bool draw_sphere
 ) {
     this->shader = shader;
     this->camera = camera;
     this->cloth = cloth;
+    this->draw_sphere = draw_sphere;
 
     this->initVertices();
     this->initIndices();
     this->updateNormals();
 
     this->glo.initData();
+    /*******************************my code*************************************/
+    this->createSphere(0.5,0,-1.0,0); // create the sphere
+    this->sphere.initData(); // render the sphere
+    /*******************************my code*************************************/
 }
 
 void RectClothRenderer::
@@ -40,16 +46,28 @@ draw() {
     glBindVertexArray(glo.VAO);
     glBindBuffer(GL_ARRAY_BUFFER, glo.VBO);
 
-    this->shader->setBool("DrawLine", false);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FLAT); // We want flat mode
+    // this->shader->setBool("DrawLine", false);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FLAT); // We want flat mode
+    // glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(glo.indices.size()), GL_UNSIGNED_INT, 0);
+
+    this->shader->setBool("DrawLine", true);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // We want line mode
     glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(glo.indices.size()), GL_UNSIGNED_INT, 0);
 
-    // this->shader->setBool("DrawLine", true);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // We want line mode
-    // glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(glo.indices.size()), GL_UNSIGNED_INT, 0);
+    /*******************************my code*************************************/
+    // render the sphere
+    if(this->draw_sphere)
+    {
+        glBindVertexArray(sphere.VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, sphere.VBO);
+        glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(sphere.indices.size()), GL_UNSIGNED_INT, 0);
+    }
+    /*******************************my code*************************************/
+
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
 
     // glPolygonMode(GL_FRONT_AND_BACK, previous); // restore previous mode
 }
@@ -146,3 +164,56 @@ updateNormals() {
         this->glo.vertices[i].normal = glm::normalize(this->glo.vertices[i].normal);
     }
 }
+
+/*******************************my code*************************************/
+// create the vertex data of the sphere.
+void RectClothRenderer::
+createSphere(float radius, float rx, float ry, float rz) {
+    auto& v = this->sphere.vertices;
+    auto& ind = this->sphere.indices;
+
+    float pi = std::numbers::pi_v<float>;
+    
+    int theta_sep = 20;
+    float theta_delta = 2 * pi / theta_sep;
+
+    int phi_sep = 10;
+    float phi_delta = pi / phi_sep;
+
+    int stride = phi_sep + 1;
+
+    v.resize((theta_sep + 1) * (phi_sep + 1));
+    for (int t = 0; t < theta_sep + 1; ++t)
+    {
+        float theta = t * theta_delta;
+        for (int p = 0; p < phi_sep + 1; p++)
+        {
+            float phi = p * phi_delta;
+
+            // set the position of the sphere as (0,-2,0)
+            float x = radius * sinf(phi) * cosf(theta)+rx;
+            float y = radius * sinf(phi) * sinf(theta)+ry;
+            float z = radius * cosf(phi)+rz;
+
+            v[t * stride + p].position = glm::vec3(x, y, z);
+            v[t * stride + p].normal = normalize(glm::vec3(x, y, z));
+        }
+    }
+
+    ind.reserve(3 * 2 * theta_sep * phi_sep);
+    for (int t = 0; t < theta_sep; t++)
+    {
+        for (int p = 0; p < phi_sep; p++)
+        {
+            ind.push_back(t * stride + p);
+            ind.push_back(t * stride + p + 1);
+            ind.push_back((t + 1) * stride + p);
+
+            ind.push_back(t * stride + p + 1);
+            ind.push_back((t + 1) * stride + p);
+            ind.push_back((t + 1) * stride + p + 1);
+        }
+    }
+    this->sphere.initData();
+}
+/*******************************my code end*************************************/
